@@ -7,11 +7,12 @@
 //
 
 #import "NSURLConnectionSampleAppDelegate.h"
+#import "ImageLoadViewController.h"
 
 @implementation NSURLConnectionSampleAppDelegate
 
 @synthesize window;
-
+@synthesize viewController;
 
 #pragma mark -
 #pragma mark Application lifecycle
@@ -19,7 +20,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {    
 	
     // Override point for customization after application launch.
-	
+	viewController = [[ImageLoadViewController alloc] init];
+	[window addSubview:viewController.view];
     [window makeKeyAndVisible];
 	
 	return YES;
@@ -48,6 +50,8 @@
 }
 
 
+
+
 #pragma mark -
 #pragma mark Memory management
 
@@ -59,6 +63,7 @@
 
 
 - (void)dealloc {
+    [viewController release];
     [window release];
     [super dealloc];
 }

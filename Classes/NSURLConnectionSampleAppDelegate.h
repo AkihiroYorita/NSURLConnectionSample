@@ -8,11 +8,15 @@
 
 #import <UIKit/UIKit.h>
 
+@class ImageLoadViewController;
+
 @interface NSURLConnectionSampleAppDelegate : NSObject <UIApplicationDelegate> {
     UIWindow *window;
+	ImageLoadViewController *viewController;
 }
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
+@property (nonatomic, retain) IBOutlet ImageLoadViewController *viewController;
 
 @end
 
