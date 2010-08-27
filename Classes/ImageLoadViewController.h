@@ -9,21 +9,14 @@
 #import <UIKit/UIKit.h>
 
 
-@interface ImageLoadViewController : UIViewController {
-//connection
-	NSMutableData *imageData;
-	UIImage *image;
-	UIView *view;
-
+@interface ImageLoadViewController : UIViewController {	
 	//表示
 	UIImageView* imageView_;
 	UIImageView* imageView2_;
-	NSInteger count_;
-	NSURLConnection *connection1;
-	NSURLConnection *connection2;
+	//queue
+	NSOperationQueue* _queue;
 }
 
-@property (nonatomic, retain) NSMutableData *imageData;
-@property (nonatomic, retain) UIImage *image;
+
 
 @end

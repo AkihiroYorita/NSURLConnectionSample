@@ -7,11 +7,16 @@
 //
 
 #import "ImageLoadViewController.h"
+#import "DownloadOperation.h"
 
+@interface ImageLoadViewController(PrivateMethods)
+- (NSOperation *)operationForURLString:(NSString *)urlString
+							 withIndex:(int)index;
+@end
 
 @implementation ImageLoadViewController
-@synthesize imageData;
-@synthesize image;
+
+
 /*
  // The designated initializer.  Override if you create the controller programmatically and want to perform customization that is not appropriate for viewDidLoad.
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -28,33 +33,42 @@
 }
 */
 
-
 // Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-	NSURL *url = [NSURL URLWithString:@"http://k.yimg.jp/images/top/sp/logo.gif"];
-	NSURLRequest *request = [NSURLRequest requestWithURL:url];
-	connection1 = [[NSURLConnection alloc] initWithRequest:request delegate:self];
-	[connection1 start];
-	imageView_ = [[UIImageView alloc]initWithFrame:CGRectMake(0, 300, 300, 300)];
-	[self.view addSubview:imageView_];
+	// NSOperationQueueを作成する
+    _queue = [[NSOperationQueue alloc] init];
 
-	NSURL *url2_ = [NSURL URLWithString:@"http://k.yimg.jp/images/sh/recommend/84_84_2397.jpg"];
-	NSURLRequest *request2_ = [NSURLRequest requestWithURL:url2_];
-	connection2 = [[NSURLConnection alloc] initWithRequest:request2_ delegate:self];
+	[_queue addOperation:[self operationForURLString:@"http://k.yimg.jp/images/top/sp/logo.gif" withIndex:0]];
+	[_queue addOperation:[self operationForURLString:@"http://k.yimg.jp/images/sh/recommend/84_84_2397.jpg" withIndex:1]];
+
+	imageView_ = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0, 300, 300)];
+	[self.view addSubview:imageView_];
 	
-	[connection2 start];
-	
-//	UIImage* image = [UIImage imageNamed:@"logo.gif"];
-	
-	imageView2_ = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0, 300, 300)];
+	imageView2_ = [[UIImageView alloc]initWithFrame:CGRectMake(0, 300, 300, 300)];
 	[self.view addSubview:imageView2_];
 	
-//	imageView_.autoresizingMask = UIViewAutoresizingNone;
-//	imageView_.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	NSLog(@"connect");
+
 }
 
+
+- (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object 
+						change:(NSDictionary*)change context:(void*)context
+{
+	DownloadOperation *op = (DownloadOperation*)object;
+	if ( op.index == 0 ) {
+		imageView_.image = [UIImage imageWithData:op.data];;//imageviewにセット
+	}
+	else if ( op.index == 1 ) {
+		imageView2_.image = [UIImage imageWithData:op.data];;//imageviewにセット
+	}
+    
+	
+    // キー値監視を解除する
+    [object removeObserver:self forKeyPath:keyPath];
+}
 
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
@@ -80,57 +94,29 @@
 
 
 - (void)dealloc {
+	[_queue release];
 	[imageView_ release];
 	[imageView2_ release];
     [super dealloc];
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
+- (NSOperation *)operationForURLString:(NSString *)urlString
+							 withIndex:(int)index
 {
-	self.imageData = [[[NSMutableData alloc]init]autorelease];
-	NSLog(@"hello");
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-	[self.imageData appendData:data];
-	NSLog(@"hello1");
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-{
-	self.image = [UIImage imageWithData:self.imageData];
+	// URLを指定する
+	NSURL *url = [NSURL URLWithString:urlString];
+	NSURLRequest *request = [NSURLRequest requestWithURL:url];
 	
-	if ( connection == connection1 ) {
-		imageView_.image = self.image;//imageviewにセット
-	}
-	if ( connection == connection2 ) {
-		imageView2_.image = self.image;//imageview２にセット
-	}
+	// DownloadOperationを作成する
+	DownloadOperation*  operation;
+	operation = [[DownloadOperation alloc] initWithRequest:request];
+	//	[operation autorelease];
 	
-	NSLog(@"hello2");
-}
-
-/*
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-	self.imageData = [[[NSMutableData alloc]init]autorelease];
-	NSLog(@"hello");
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-	[self.imageData appendData:data];
-	NSLog(@"hello1");
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-{
-	self.image = [UIImage imageWithData:self.imageData];
-	imageView2_.image = self.image;//imageviewにセット
+	// キー値監視を登録する
+	[operation addObserver:self forKeyPath:@"isFinished" 
+				   options:NSKeyValueObservingOptionNew context:nil];
 	
-	NSLog(@"hello2");
+	operation.index = index;
+	return [operation autorelease];
 }
-*/
-
 @end
